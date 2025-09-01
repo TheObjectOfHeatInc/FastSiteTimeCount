@@ -23,9 +23,9 @@ case "$1" in
         docker-compose build
         # Устанавливаем переменные окружения для продакшена
         export NODE_ENV=production
-        export BASE_URL=https://lehagigachad.ru
+        export BASE_URL=http://lehagigachad.ru
         docker-compose up -d
-        echo "✅ Запущено на https://lehagigachad.ru"
+        echo "✅ Запущено на http://lehagigachad.ru (порт 80)"
         ;;
     "stop")
         echo "🛑 Остановка..."

@@ -7,16 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Базовый URL для генерации ссылок
-const BASE_URL = process.env.BASE_URL || 'https://lehagigachad.ru';
+const BASE_URL = process.env.BASE_URL || 'http://lehagigachad.ru';
 
-// Middleware для перенаправления на HTTPS (если запрос пришел по HTTP)
+// Middleware для перенаправления на HTTPS (временно отключен для HTTP)
 app.use((req, res, next) => {
-    // Проверяем, если запрос пришел по HTTP и мы в продакшене
-    if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
-        res.redirect(`https://${req.header('host')}${req.url}`);
-    } else {
+    // Отключаем HTTPS редирект для работы на HTTP
+    // if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
+    //     res.redirect(`https://${req.header('host')}${req.url}`);
+    // } else {
         next();
-    }
+    // }
 });
 
 // Целевая дата - 11 сентября 2025 года

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Таймер - Превью</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         body {
             margin: 0;
@@ -59,6 +58,13 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
             opacity: 0.3;
         }
+        
+        /* Скрытый canvas для генерации изображения */
+        #imageCanvas {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +75,9 @@
             <div class="preview-date" id="preview-date">01.01.2024</div>
         </div>
     </div>
+    
+    <!-- Скрытый canvas для генерации изображения -->
+    <canvas id="imageCanvas" width="1200" height="630"></canvas>
     
     <script>
         // Функция для форматирования времени
@@ -87,6 +96,62 @@
             return `${day}.${month}.${year}`;
         }
 
+        // Функция для генерации изображения
+        function generateImage() {
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+            const now = new Date();
+            const timeString = formatTime(now);
+            const dateString = formatDate(now);
+            
+            // Создаем градиентный фон
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Заливаем фон
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+            
+            // Добавляем декоративные элементы
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * 1200;
+                const y = Math.random() * 630;
+                const radius = Math.random() * 3 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Рисуем заголовок
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fillText('Таймер', 600, 200);
+            
+            // Рисуем время
+            ctx.font = 'bold 120px "Courier New", monospace';
+            ctx.fillText(timeString, 600, 350);
+            
+            // Рисуем дату
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText(dateString, 600, 420);
+            
+            // Убираем тени
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Возвращаем data URL изображения
+            return canvas.toDataURL('image/png');
+        }
+
         // Обновляем время на странице превью
         function updatePreviewTime() {
             const now = new Date();
@@ -99,6 +164,21 @@
             
             if (dateElement) {
                 dateElement.textContent = formatDate(now);
+            }
+            
+            // Генерируем изображение и обновляем мета-теги
+            const imageDataUrl = generateImage();
+            
+            // Обновляем мета-теги для превью
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            
+            if (ogImage) {
+                ogImage.setAttribute('content', imageDataUrl);
+            }
+            
+            if (twitterImage) {
+                twitterImage.setAttribute('content', imageDataUrl);
             }
         }
         

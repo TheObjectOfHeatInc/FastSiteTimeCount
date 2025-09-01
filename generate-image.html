@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор изображения таймера</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #5a6fd8;
+        }
+        
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .download-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="generateImage()">Сгенерировать изображение</button>
+        <button onclick="downloadImage()">Скачать изображение</button>
+        <button onclick="copyImageUrl()">Скопировать URL</button>
+        <div id="imageUrl"></div>
+    </div>
+    
+    <canvas id="timerCanvas" width="1200" height="630"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('timerCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function generateImage() {
+            const now = new Date();
+            const timeString = formatTime(now);
+            const dateString = formatDate(now);
+            
+            // Создаем градиентный фон
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Заливаем фон
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+            
+            // Добавляем декоративные элементы
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * 1200;
+                const y = Math.random() * 630;
+                const radius = Math.random() * 3 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Рисуем заголовок
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fillText('Таймер', 600, 200);
+            
+            // Рисуем время
+            ctx.font = 'bold 120px "Courier New", monospace';
+            ctx.fillText(timeString, 600, 350);
+            
+            // Рисуем дату
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText(dateString, 600, 420);
+            
+            // Убираем тени
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Показываем URL изображения
+            const imageUrl = canvas.toDataURL('image/png');
+            document.getElementById('imageUrl').innerHTML = 
+                `<strong>URL изображения:</strong> <span style="word-break: break-all;">${imageUrl.substring(0, 100)}...</span>`;
+        }
+        
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+        
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = `timer-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function copyImageUrl() {
+            const imageUrl = canvas.toDataURL('image/png');
+            navigator.clipboard.writeText(imageUrl).then(() => {
+                alert('URL изображения скопирован в буфер обмена!');
+            });
+        }
+        
+        // Генерируем изображение при загрузке страницы
+        generateImage();
+        
+        // Обновляем изображение каждую секунду
+        setInterval(generateImage, 1000);
+    </script>
+</body>
+</html>

@@ -37,17 +37,78 @@ function getTimeRemaining() {
 }
 
 // Инициализация Telegram бота
-function initTelegramBot() {
+async function initTelegramBot() {
     if (!BOT_TOKEN) {
         console.log('⚠️ BOT_TOKEN не найден. Бот отключен.');
         return;
     }
 
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
-    console.log('🤖 Telegram бот инициализирован');
+    try {
+        console.log('🔄 Очищаю предыдущие подключения...');
+        
+        // Создаём временный экземпляр для очистки
+        const tempBot = new TelegramBot(BOT_TOKEN);
+        
+        // Удаляем webhook если есть
+        await tempBot.deleteWebHook();
+        
+        // Очищаем pending updates
+        await tempBot.getUpdates({ offset: -1, limit: 1 });
+        
+        console.log('✅ Предыдущие подключения очищены');
+        
+        // Ждём немного
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Создаём основного бота
+        bot = new TelegramBot(BOT_TOKEN, { 
+            polling: {
+                interval: 2000,
+                autoStart: false,
+                params: {
+                    timeout: 20,
+                    offset: 0
+                }
+            }
+        });
+        
+        // Запускаем polling вручную
+        await bot.startPolling();
+        console.log('🤖 Telegram бот инициализирован');
+
+        // Обработка ошибок polling с ограничением переподключений
+        let reconnectAttempts = 0;
+        const maxReconnects = 3;
+        
+        bot.on('polling_error', async (error) => {
+            console.log('❌ Ошибка polling:', error.message);
+            
+            if (error.message.includes('409') && reconnectAttempts < maxReconnects) {
+                reconnectAttempts++;
+                console.log(`⚠️ Конфликт экземпляров! Попытка ${reconnectAttempts}/${maxReconnects}...`);
+                
+                try {
+                    await bot.stopPolling();
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    await bot.startPolling();
+                    console.log('🔄 Переподключение выполнено');
+                } catch (e) {
+                    console.log('❌ Ошибка переподключения:', e.message);
+                }
+            } else if (reconnectAttempts >= maxReconnects) {
+                console.log('💀 Превышено количество попыток переподключения. Бот остановлен.');
+                process.exit(1);
+            }
+        });
+        
+    } catch (error) {
+        console.log('❌ Ошибка инициализации бота:', error.message);
+        console.log('💡 Попробуйте сначала запустить: BOT_TOKEN="ваш_токен" node reset-bot.js');
+    }
 
     // Команда /start
     bot.onText(/\/start/, (msg) => {
+        console.log('🟢 КОМАНДА /start от', msg.from?.username || msg.from?.first_name, 'в чате', msg.chat.type);
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, `🎯 Привет! Я бот таймера до 11.09.2025!
         
@@ -91,8 +152,8 @@ ${isActive ? '✅ Таймер активен' : '❌ Таймер остано�
         sendCurrentTimer(chatId);
     });
 
-    // Быстрая команда "СТАРТУЕМ!"
-    bot.onText(/СТАРТУЕМ!/i, (msg) => {
+    // Быстрая команда "СТАРТУЕМ!" и различные варианты
+    bot.onText(/(СТАРТУЕМ!|Стартуем!|стартуем!|старт|СТАРТ)/i, (msg) => {
         const chatId = msg.chat.id;
         startTimerForChat(chatId);
     });
@@ -101,6 +162,54 @@ ${isActive ? '✅ Таймер активен' : '❌ Таймер остано�
     bot.onText(/стоп!/i, (msg) => {
         const chatId = msg.chat.id;
         stopTimerForChat(chatId);
+    });
+
+    // Обработчик всех сообщений
+    bot.on('message', (msg) => {
+        console.log('📨 ПОЛУЧЕНО СООБЩЕНИЕ:');
+        console.log('  👤 От:', msg.from?.username || msg.from?.first_name || 'Неизвестный');
+        console.log('  💬 Чат:', msg.chat.type, '|', msg.chat.title || msg.chat.first_name || 'Личка');
+        console.log('  📝 Текст:', msg.text || 'НЕТ ТЕКСТА');
+        console.log('  🆔 Chat ID:', msg.chat.id);
+        console.log('  ⏰ Время:', new Date().toLocaleString());
+        console.log('---');
+        
+        const chatId = msg.chat.id;
+        const text = msg.text;
+        
+        // Проверяем специальные команды, которые уже обработаны выше
+        if (text && text.startsWith('/')) {
+            console.log('⏭️ Команда уже обработана:', text);
+            return;
+        }
+        
+        // Проверяем команды "Стартуем" и "стоп" - они уже обработаны
+        if (text && (/(СТАРТУЕМ!|Стартуем!|стартуем!|старт|СТАРТ)/i.test(text) || /стоп!/i.test(text))) {
+            console.log('⏭️ Быстрая команда уже обработана:', text);
+            return;
+        }
+        
+        console.log('🚀 Отправляю ответ на обычное сообщение...');
+        
+        // Отвечаем на все остальные сообщения
+        const remaining = getTimeRemaining();
+        const currentTime = formatTime(remaining);
+        
+        bot.sendMessage(chatId, `🤖 Привет! Получил твоё сообщение: "${text}"
+
+⏰ До 11 сентября 2025 осталось: ${currentTime}
+
+🚀 Хочешь запустить живой таймер? Напиши "Стартуем!" или используй команду /timer
+
+📝 Доступные команды:
+• "Стартуем!" - запустить таймер
+• "стоп!" - остановить таймер  
+• /status - проверить статус
+• /time - показать текущее время`).then(() => {
+            console.log('✅ Ответ отправлен успешно!');
+        }).catch(error => {
+            console.log('❌ Ошибка отправки ответа:', error.message);
+        });
     });
 }
 
@@ -889,7 +998,9 @@ app.listen(PORT, () => {
     setInterval(saveTimerImage, 60000);
     
     // Запускаем Telegram бота
-    initTelegramBot();
+    initTelegramBot().catch(error => {
+        console.log('❌ Критическая ошибка бота:', error.message);
+    });
 });
 
 module.exports = app;

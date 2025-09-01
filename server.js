@@ -341,20 +341,98 @@ app.get('/force-update', (req, res) => {
     const fullUrl = getBaseUrl(req);
     const remaining = getTimeRemaining();
     const currentTime = formatTime(remaining);
-    const forceId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const timestamp = Date.now();
     
     res.json({
         currentTime,
         remaining,
-        forceUpdateUrl: `${fullUrl}/preview?force=${forceId}`,
+        newTimerUrl: `${fullUrl}/timer/${timestamp}`,
         instructions: [
-            "1. Отправьте эту ссылку боту @WebpageBot в Telegram:",
-            `${fullUrl}/preview?force=${forceId}`,
-            "2. Или используйте в любом чате Telegram для обновления превью"
+            "🚀 НОВЫЙ МЕТОД - отправьте эту ссылку:",
+            `${fullUrl}/timer/${timestamp}`,
+            "",
+            "📋 Или старым способом боту @WebpageBot:",
+            `${fullUrl}/preview?t=${timestamp}`,
+            "",
+            "💡 Каждая ссылка уникальна и должна обойти кэш!"
         ],
-        imageUrl: `${fullUrl}/timer-image?force=${forceId}`,
-        tip: "Каждый запрос генерирует уникальную ссылку для обхода кэша"
+        imageUrl: `${fullUrl}/timer-image?v=${timestamp}`,
+        tip: "Используйте /timer/ ссылки - они должны лучше работать"
     });
+});
+
+// Динамический таймер для обхода кэша Telegram
+app.get('/timer/:timestamp', (req, res) => {
+    const fullUrl = getBaseUrl(req);
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    const timestamp = req.params.timestamp || Date.now();
+    const imageUrl = `${fullUrl}/timer-image?id=${timestamp}&v=${Math.floor(Date.now() / 10000)}`;
+    
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ ${currentTime} до 11.09.2025</title>
+    
+    <!-- Open Graph теги -->
+    <meta property="og:title" content="⏰ Осталось: ${currentTime}">
+    <meta property="og:description" content="До 11 сентября 2025 года осталось ${currentTime}. Обновляется каждую секунду!">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${fullUrl}/timer/${timestamp}">
+    
+    <!-- Twitter теги -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="⏰ Осталось: ${currentTime}">
+    <meta name="twitter:description" content="До 11 сентября 2025: ${currentTime}">
+    <meta name="twitter:image" content="${imageUrl}">
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .timer { 
+            font-size: 4em; 
+            margin: 20px 0; 
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .info { 
+            font-size: 1.5em; 
+            opacity: 0.9; 
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>⏰ До 11 сентября 2025 осталось:</h1>
+    <div class="timer">${currentTime}</div>
+    <div class="info">Цель: 11.09.2025</div>
+    <div class="info">ID: ${timestamp}</div>
+    <script>
+        setTimeout(() => window.location.reload(), 60000);
+    </script>
+</body>
+</html>`;
+
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.send(html);
 });
 
 // Функция для получения базового URL

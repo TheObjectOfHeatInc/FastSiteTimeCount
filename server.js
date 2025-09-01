@@ -122,6 +122,35 @@ app.get('/api/time', (req, res) => {
     });
 });
 
+// Специальный эндпоинт для обновления Telegram превью
+app.get('/refresh', (req, res) => {
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    const fullUrl = `${protocol}://${host}`;
+    const imageUrl = `${fullUrl}/timer-image`;
+    const elapsedTime = Date.now() - startTime;
+    
+    // Читаем HTML файл
+    let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    
+    // Заменяем все meta теги с абсолютными URL и уникальными значениями
+    html = html.replace('<meta property="og:url" content="">', `<meta property="og:url" content="${fullUrl}/refresh?t=${Date.now()}">`);
+    html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}?t=${Date.now()}"`);
+    html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}?t=${Date.now()}">`);
+    
+    // Добавляем текущее время в заголовок и описание
+    html = html.replace('content="🕐 Живой таймер"', `content="🕐 Таймер: ${formatTime(elapsedTime)}"`);
+    html = html.replace('content="Таймер, который обновляется в реальном времени каждую минуту"', `content="Актуальное время: ${formatTime(elapsedTime)} | Обновлено: ${new Date().toLocaleTimeString('ru-RU')}"`);
+    
+    // Заголовки для предотвращения кэширования
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    
+    res.send(html);
+});
+
 // Главная страница с динамическими meta тегами
 app.get('/', (req, res) => {
     const protocol = req.get('x-forwarded-proto') || req.protocol;
@@ -137,6 +166,14 @@ app.get('/', (req, res) => {
     
     // Заменяем относительные пути на абсолютные для всех вхождений
     html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}"`);
+    
+    // Добавляем абсолютный URL и в Twitter карточку
+    html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}">`);
+    
+    // Добавляем дополнительные заголовки для лучшей совместимости
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     res.send(html);
 });

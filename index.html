@@ -3,41 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Таймер</title>
+    <title>Таймер для Telegram Preview</title>
     
-    <!-- Мета-теги для превью в Telegram -->
-    <meta property="og:title" content="⏰ Таймер - Текущее время">
-    <meta property="og:description" content="Красивый таймер с текущим временем и датой. Обновляется в реальном времени!">
-    <meta property="og:image" content="https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-preview.png?v=2">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:url" content="https://theobjectofheatinc.github.io/FastSiteTimeCount/?v=2">
+    <!-- Open Graph теги для Telegram превью -->
+    <meta property="og:title" content="🕐 Живой таймер">
+    <meta property="og:description" content="Таймер, который обновляется в реальном времени каждую минуту">
+    <meta property="og:image" content="/timer-image">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Таймер">
+    <meta property="og:url" content="">
     
     <!-- Telegram специфичные теги -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="⏰ Таймер - Текущее время">
-    <meta name="twitter:description" content="Красивый таймер с текущим временем и датой. Обновляется в реальном времени!">
-    <meta name="twitter:image" content="https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-preview.png?v=2">
-    <meta name="twitter:image:width" content="1200">
-    <meta name="twitter:image:height" content="630">
+    <meta name="twitter:title" content="🕐 Живой таймер">
+    <meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">
+    <meta name="twitter:image" content="/timer-image">
     
-    <link rel="stylesheet" href="style.css">
+    <!-- Обновление страницы каждую минуту для нового превью -->
+    <meta http-equiv="refresh" content="60">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .timer-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .timer-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            margin-top: 30px;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin-top: 20px;
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Таймер</h1>
-        <div class="timer-display">
-            <div class="time" id="time">00:00:00</div>
-            <div class="date" id="date">01.01.2024</div>
-        </div>
-        <div class="info">
-            <p>Этот таймер обновляется каждую минуту и генерирует картинку для превью в Telegram</p>
-            <p>Скопируй ссылку на эту страницу и отправь в Telegram - увидишь превью с текущим временем!</p>
-        </div>
+    <div class="timer-container">
+        <div class="timer-label">Таймер работает уже:</div>
+        <div class="timer-display" id="timer">00:00:00</div>
+        <div class="status" id="status">Таймер запущен автоматически</div>
     </div>
-    
-    <script src="script.js"></script>
+
+    <script>
+        // Время запуска страницы (всегда начинаем с 0)
+        const startTime = Date.now();
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            const elapsedTime = Date.now() - startTime;
+            document.getElementById('timer').textContent = formatTime(elapsedTime);
+        }
+
+        // Запускаем таймер сразу при загрузке
+        updateTimer(); // Сразу показываем 00:00:00
+        setInterval(updateTimer, 1000); // Обновляем каждую секунду
+
+        // Обновляем статус через 1 секунду
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'Работает непрерывно с момента запуска';
+        }, 1000);
+    </script>
 </body>
 </html>

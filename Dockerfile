@@ -4,7 +4,7 @@ FROM node:18-alpine
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем системные зависимости для Sharp и шрифты
+# Устанавливаем системные зависимости для Sharp, Canvas и шрифты
 RUN apk add --no-cache \
     vips-dev \
     pkgconfig \
@@ -15,7 +15,11 @@ RUN apk add --no-cache \
     fontconfig \
     ttf-dejavu \
     ttf-liberation \
-    ttf-opensans
+    ttf-opensans \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    pixman-dev
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./

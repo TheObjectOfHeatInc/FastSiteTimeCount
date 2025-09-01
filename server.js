@@ -45,7 +45,71 @@ function formatTime(ms) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Функция для создания SVG с обратным отсчетом
+// Функция для создания изображения с Canvas (новый метод)
+function createTimerCanvas() {
+    const remaining = getTimeRemaining();
+    const formattedTime = formatTime(remaining);
+    const currentTime = new Date().toLocaleString('ru-RU');
+    const targetDate = new Date(TARGET_DATE).toLocaleDateString('ru-RU');
+
+    // Создаем canvas
+    const width = 800;
+    const height = 400;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Создаем градиентный фон
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Полупрозрачный контейнер
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.roundRect(50, 50, 700, 300, 20);
+    ctx.fill();
+
+    // Настройка текста
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Заголовок
+    ctx.font = 'bold 26px "DejaVu Sans", Arial, sans-serif';
+    ctx.fillText('До 11 сентября 2025 осталось:', width / 2, 100);
+
+    // Время (большими цифрами)
+    ctx.font = 'bold 64px "DejaVu Sans Mono", "Courier New", monospace';
+    ctx.fillText(formattedTime, width / 2, 180);
+
+    // Целевая дата
+    ctx.font = '18px "DejaVu Sans", Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText(`Целевая дата: ${targetDate}`, width / 2, 250);
+
+    // Время обновления
+    ctx.font = '16px "DejaVu Sans", Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fillText(`Обновлено: ${currentTime}`, width / 2, 280);
+
+    // Декоративные точки
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(150, 330, 4, 0, 2 * Math.PI);
+    ctx.arc(650, 330, 4, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.arc(200, 80, 3, 0, 2 * Math.PI);
+    ctx.arc(600, 80, 3, 0, 2 * Math.PI);
+    ctx.fill();
+
+    return canvas.toBuffer('image/png');
+}
+
+// Функция для создания SVG с обратным отсчетом (старый метод)
 function createTimerSVG() {
     const currentTime = new Date().toLocaleString('ru-RU');
     const remaining = getTimeRemaining();
@@ -91,27 +155,27 @@ function createTimerSVG() {
   <rect x="50" y="50" width="700" height="300" fill="rgba(255,255,255,0.1)" rx="20"/>
   
   <!-- Заголовок -->
-  <text x="400" y="100" text-anchor="middle" fill="white" class="title-font"
-        font-size="26" filter="url(#shadow)">
-    До 11 сентября 2025 осталось:
+  <text x="400" y="100" text-anchor="middle" fill="white" 
+        font-family="Arial, sans-serif" font-size="26" font-weight="bold">
+    TIME LEFT: 11.09.2025
   </text>
   
   <!-- Время -->
-  <text x="400" y="180" text-anchor="middle" fill="white" class="timer-font"
-        font-size="64" filter="url(#shadow)">
+  <text x="400" y="180" text-anchor="middle" fill="white" 
+        font-family="monospace" font-size="72" font-weight="bold">
     ${safeFormattedTime}
   </text>
   
   <!-- Подпись -->
   <text x="400" y="250" text-anchor="middle" fill="rgba(255,255,255,0.8)" 
-        class="info-font" font-size="18">
-    Целевая дата: ${safeTargetDate}
+        font-family="Arial, sans-serif" font-size="18">
+    TARGET: ${safeTargetDate}
   </text>
   
   <!-- Время обновления -->
   <text x="400" y="280" text-anchor="middle" fill="rgba(255,255,255,0.6)" 
-        class="info-font" font-size="16">
-    Обновлено: ${safeCurrentTime}
+        font-family="Arial, sans-serif" font-size="16">
+    UPDATED: ${new Date().toLocaleTimeString()}
   </text>
   
   <!-- Декоративные элементы -->
@@ -125,15 +189,14 @@ function createTimerSVG() {
 // Маршрут для получения изображения таймера
 app.get('/timer-image', async (req, res) => {
     try {
+        // Используем SVG без кириллицы для лучшей совместимости
         const svgString = createTimerSVG();
         
-        // Конвертируем SVG в PNG с помощью Sharp с явной настройкой плотности
         const pngBuffer = await sharp(Buffer.from(svgString, 'utf8'), {
-            density: 300  // Высокая плотность для четкого текста
+            density: 150
         })
             .png({
-                quality: 100,
-                compressionLevel: 6
+                quality: 95
             })
             .toBuffer();
         
@@ -187,7 +250,43 @@ app.get('/api/target', (req, res) => {
     });
 });
 
-// Тестовый маршрут для проверки шрифтов
+// Тестовый маршрут для проверки Canvas
+app.get('/test-canvas', async (req, res) => {
+    try {
+        const canvas = createCanvas(800, 400);
+        const ctx = canvas.getContext('2d');
+
+        // Фон
+        ctx.fillStyle = '#667eea';
+        ctx.fillRect(0, 0, 800, 400);
+
+        // Тест текста
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.font = '32px Arial';
+        ctx.fillText('Тест кириллицы: Привет мир!', 400, 100);
+
+        ctx.font = 'bold 48px monospace';
+        ctx.fillText('Цифры: 123:45:67', 400, 180);
+
+        ctx.font = '24px serif';
+        ctx.fillText('Время: ' + new Date().toLocaleTimeString('ru-RU'), 400, 260);
+
+        ctx.font = '20px sans-serif';
+        ctx.fillText('Canvas работает!', 400, 320);
+
+        const buffer = canvas.toBuffer('image/png');
+        res.setHeader('Content-Type', 'image/png');
+        res.send(buffer);
+    } catch (error) {
+        console.error('Ошибка Canvas:', error);
+        res.status(500).send('Ошибка Canvas: ' + error.message);
+    }
+});
+
+// Тестовый маршрут для проверки шрифтов (SVG)
 app.get('/test-fonts', async (req, res) => {
     try {
         const testSVG = `<?xml version="1.0" encoding="UTF-8"?>
@@ -420,13 +519,11 @@ async function saveTimerImage() {
         const remaining = getTimeRemaining();
         const svgString = createTimerSVG();
         
-        // Создаем PNG с помощью Sharp с улучшенными настройками
         const pngBuffer = await sharp(Buffer.from(svgString, 'utf8'), {
-            density: 300
+            density: 150
         })
             .png({
-                quality: 100,
-                compressionLevel: 6
+                quality: 95
             })
             .toBuffer();
         

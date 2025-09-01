@@ -646,7 +646,27 @@ app.get('/timer/:timestamp', (req, res) => {
 <body>
     <div class="timer">${currentTime}</div>
     <script>
-        setTimeout(() => window.location.reload(), 60000);
+        let targetDate = ${TARGET_DATE};
+        
+        function formatTime(ms) {
+            if (ms <= 0) return "00:00:00";
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return hours.toString().padStart(2, '0') + ':' + 
+                   minutes.toString().padStart(2, '0') + ':' + 
+                   seconds.toString().padStart(2, '0');
+        }
+
+        function updateTimer() {
+            const remaining = Math.max(0, targetDate - Date.now());
+            document.querySelector('.timer').textContent = formatTime(remaining);
+        }
+
+        // Обновляем каждую секунду
+        setInterval(updateTimer, 1000);
+        updateTimer(); // Первое обновление сразу
     </script>
 </body>
 </html>`;
@@ -747,8 +767,27 @@ app.get('/preview', (req, res) => {
 <body>
     <div class="timer">${currentTime}</div>
     <script>
-        // Автоматическое обновление каждую секунду
-        setTimeout(() => window.location.reload(), 60000);
+        let targetDate = ${TARGET_DATE};
+        
+        function formatTime(ms) {
+            if (ms <= 0) return "00:00:00";
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return hours.toString().padStart(2, '0') + ':' + 
+                   minutes.toString().padStart(2, '0') + ':' + 
+                   seconds.toString().padStart(2, '0');
+        }
+
+        function updateTimer() {
+            const remaining = Math.max(0, targetDate - Date.now());
+            document.querySelector('.timer').textContent = formatTime(remaining);
+        }
+
+        // Обновляем каждую секунду
+        setInterval(updateTimer, 1000);
+        updateTimer(); // Первое обновление сразу
     </script>
 </body>
 </html>`;

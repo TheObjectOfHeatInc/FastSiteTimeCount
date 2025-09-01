@@ -49,14 +49,14 @@ function updateMetaTags(date) {
     const twitterDescription = document.querySelector('meta[name="twitter:description"]');
     const twitterImage = document.querySelector('meta[name="twitter:image"]');
     
-    if (ogTitle) ogTitle.setAttribute('content', `Таймер - ${timeString}`);
+    if (ogTitle) ogTitle.setAttribute('content', `⏰ Таймер - ${timeString}`);
     if (ogDescription) ogDescription.setAttribute('content', description);
-    if (ogImage) ogImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-image.svg?t=${Date.now()}`);
+    if (ogImage) ogImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-preview.png?t=${Date.now()}`);
     if (ogUrl) ogUrl.setAttribute('content', window.location.href);
     
-    if (twitterTitle) twitterTitle.setAttribute('content', `Таймер - ${timeString}`);
+    if (twitterTitle) twitterTitle.setAttribute('content', `⏰ Таймер - ${timeString}`);
     if (twitterDescription) twitterDescription.setAttribute('content', description);
-    if (twitterImage) twitterImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-image.svg?t=${Date.now()}`);
+    if (twitterImage) twitterImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-preview.png?t=${Date.now()}`);
 }
 
 // Функция для получения параметров из URL

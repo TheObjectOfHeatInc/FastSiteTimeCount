@@ -182,11 +182,7 @@ ${isActive ? '✅ Таймер активен' : '❌ Таймер остано�
 function startTimerForChat(chatId) {
     activeChats.add(chatId);
     
-    bot.sendMessage(chatId, `🚀 Таймер запущен! Буду отправлять обновления каждую минуту.
-    
-⏰ Первая ссылка сейчас:`);
-    
-    // Отправляем первую ссылку сразу
+    // Отправляем ссылку сразу без лишнего текста
     sendCurrentTimer(chatId);
     
     // Запускаем глобальный таймер если его нет
@@ -615,46 +611,30 @@ app.get('/live', (req, res) => {
     <meta http-equiv="refresh" content="30">
     
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            background: #000;
+            color: #fff;
         }
-        .timer { 
-            font-size: 4em; 
-            margin: 20px 0; 
-            font-family: monospace;
-            font-weight: bold;
+        .timer {
+            font-size: 8vw;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            text-align: center;
         }
-        .info { 
-            font-size: 1.5em; 
-            opacity: 0.9; 
-            margin: 10px 0;
-        }
-        .live { 
-            color: #00ff00; 
-            font-size: 1.2em;
-            animation: blink 2s infinite;
-        }
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.5; }
+        @media (max-width: 768px) {
+            .timer { font-size: 12vw; }
         }
     </style>
 </head>
 <body>
-    <h1>⏰ До 11 сентября 2025 осталось:</h1>
     <div class="timer">${currentTime}</div>
-    <div class="info">Цель: 11.09.2025</div>
-    <div class="live">🔴 LIVE - обновляется каждые 30 секунд</div>
-    <div class="info">Minute ID: ${minuteTimestamp}</div>
 </body>
 </html>`;
 
@@ -699,36 +679,30 @@ app.get('/timer/:timestamp', (req, res) => {
     <meta name="twitter:image" content="${imageUrl}">
     
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            background: #000;
+            color: #fff;
         }
-        .timer { 
-            font-size: 4em; 
-            margin: 20px 0; 
-            font-family: monospace;
-            font-weight: bold;
+        .timer {
+            font-size: 8vw;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            text-align: center;
         }
-        .info { 
-            font-size: 1.5em; 
-            opacity: 0.9; 
-            margin: 10px 0;
+        @media (max-width: 768px) {
+            .timer { font-size: 12vw; }
         }
     </style>
 </head>
 <body>
-    <h1>⏰ До 11 сентября 2025 осталось:</h1>
     <div class="timer">${currentTime}</div>
-    <div class="info">Цель: 11.09.2025</div>
-    <div class="info">ID: ${timestamp}</div>
     <script>
         setTimeout(() => window.location.reload(), 60000);
     </script>
@@ -815,27 +789,30 @@ app.get('/preview', (req, res) => {
     <meta name="twitter:image" content="${imageUrl}">
     
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            background: #000;
+            color: #fff;
         }
-        .timer { font-size: 3em; margin: 20px 0; }
-        .info { font-size: 1.2em; opacity: 0.8; }
+        .timer {
+            font-size: 8vw;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .timer { font-size: 12vw; }
+        }
     </style>
 </head>
 <body>
-    <h1>⏰ До 11 сентября 2025 осталось:</h1>
     <div class="timer">${currentTime}</div>
-    <div class="info">Обновлено: ${new Date().toLocaleString('ru-RU')}</div>
-    <div class="info">Ссылка создана специально для превью в Telegram</div>
     <script>
         // Автоматическое обновление каждую секунду
         setTimeout(() => window.location.reload(), 60000);

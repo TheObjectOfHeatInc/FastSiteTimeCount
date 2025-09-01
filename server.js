@@ -538,7 +538,6 @@ app.get('/live', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⏰ ${currentTime} до 11.09.2025</title>
     
     <!-- Open Graph теги -->
     <meta property="og:title" content="⏰ Осталось: ${currentTime}">
@@ -609,7 +608,6 @@ app.get('/timer/:timestamp', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⏰ ${currentTime} до 11.09.2025</title>
     
     <!-- Open Graph теги -->
     <meta property="og:image" content="${imageUrl}">
@@ -681,12 +679,8 @@ app.get('/debug/meta', (req, res) => {
     const currentTime = formatTime(remaining);
     
     const metaTags = {
-        'og:title': `⏰ До 11.09.2025: ${currentTime}`,
-        'og:description': `До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}`,
         'og:image': imageUrl,
         'og:url': `${fullUrl}?t=${timestamp}`,
-        'twitter:title': `⏰ До 11.09.2025: ${currentTime}`,
-        'twitter:description': `До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}`,
         'twitter:image': imageUrl
     };
     
@@ -715,11 +709,8 @@ app.get('/preview', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⏰ До 11.09.2025: ${currentTime}</title>
     
     <!-- Open Graph теги для превью -->
-    <meta property="og:title" content="⏰ До 11.09.2025: ${currentTime}">
-    <meta property="og:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:image:width" content="800">
     <meta property="og:image:height" content="400">
@@ -728,8 +719,6 @@ app.get('/preview', (req, res) => {
     
     <!-- Twitter теги -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="⏰ До 11.09.2025: ${currentTime}">
-    <meta name="twitter:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">
     <meta name="twitter:image" content="${imageUrl}">
     
     <style>
@@ -787,16 +776,6 @@ app.get('/refresh', (req, res) => {
     html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}?t=${Date.now()}"`);
     html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}?t=${Date.now()}">`);
     
-    // Добавляем текущее время в заголовок и описание (используем точные совпадения)
-    html = html.replace('<meta property="og:title" content="🕐 Живой таймер">', 
-                       `<meta property="og:title" content="⏰ До 11.09.2025: ${formattedTime}">`);
-    html = html.replace('<meta property="og:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
-                       `<meta property="og:description" content="До 11 сентября 2025 осталось: ${formattedTime} | ${new Date().toLocaleTimeString('ru-RU')}"`);
-    html = html.replace('<meta name="twitter:title" content="🕐 Живой таймер">', 
-                       `<meta name="twitter:title" content="⏰ До 11.09.2025: ${formattedTime}">`);
-    html = html.replace('<meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
-                       `<meta name="twitter:description" content="До 11 сентября 2025 осталось: ${formattedTime} | ${new Date().toLocaleTimeString('ru-RU')}"`);
-    
     // Заголовки для предотвращения кэширования
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -822,17 +801,7 @@ app.get('/', (req, res) => {
     html = html.replace('<meta property="og:url" content="">', `<meta property="og:url" content="${fullUrl}?t=${timestamp}">`);
     html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}"`);
     html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}">`);
-    
-    // Обновляем заголовки с актуальным временем обратного отсчета (используем точные совпадения)
-    html = html.replace('<meta property="og:title" content="🕐 Живой таймер">', 
-                       `<meta property="og:title" content="⏰ До 11.09.2025: ${currentTime}">`);
-    html = html.replace('<meta property="og:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
-                       `<meta property="og:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">`);
-    html = html.replace('<meta name="twitter:title" content="🕐 Живой таймер">', 
-                       `<meta name="twitter:title" content="⏰ До 11.09.2025: ${currentTime}">`);
-    html = html.replace('<meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
-                       `<meta name="twitter:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">`);
-    
+
     // Добавляем дополнительные заголовки для предотвращения кэширования
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');

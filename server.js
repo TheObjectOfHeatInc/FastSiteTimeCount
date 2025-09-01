@@ -27,6 +27,7 @@ const TARGET_DATE = new Date('2025-09-11T00:00:00.000Z').getTime();
 const BOT_TOKEN = process.env.BOT_TOKEN; // Получим от @BotFather
 let bot = null;
 const activeChats = new Set(); // Чаты где бот активен
+const chatMessages = new Map(); // Хранение ID сообщений для редактирования
 let timerInterval = null;
 
 // Функция для получения времени до целевой даты
@@ -233,6 +234,7 @@ function startTimerForChat(chatId) {
 // Остановка таймера для чата
 function stopTimerForChat(chatId) {
     activeChats.delete(chatId);
+    chatMessages.delete(chatId); // Очищаем ID сообщения
     
     bot.sendMessage(chatId, `⏹️ Таймер остановлен для этого чата.
     
@@ -246,15 +248,37 @@ function stopTimerForChat(chatId) {
 
 // Отправка текущего таймера
 function sendCurrentTimer(chatId) {
-    const remaining = getTimeRemaining();
-    const currentTime = formatTime(remaining);
     const timestamp = Date.now();
     const timerUrl = `${BASE_URL}/timer/${timestamp}`;
     
-    bot.sendMessage(chatId, `⏰ До 11 сентября 2025 осталось: **${currentTime}**
+    // Проверяем, есть ли уже сообщение для редактирования
+    const existingMessageId = chatMessages.get(chatId);
     
-🔗 Актуальная ссылка:
-${timerUrl}`, { parse_mode: 'Markdown' });
+    if (existingMessageId) {
+        // Редактируем существующее сообщение
+        bot.editMessageText(timerUrl, {
+            chat_id: chatId,
+            message_id: existingMessageId
+        }).catch(error => {
+            console.log(`❌ Ошибка редактирования сообщения в чате ${chatId}:`, error.message);
+            // Если не удалось отредактировать, отправляем новое
+            sendNewTimerMessage(chatId, timerUrl);
+        });
+    } else {
+        // Отправляем новое сообщение
+        sendNewTimerMessage(chatId, timerUrl);
+    }
+}
+
+// Отправка нового сообщения с таймером
+function sendNewTimerMessage(chatId, timerUrl) {
+    bot.sendMessage(chatId, timerUrl).then((message) => {
+        // Сохраняем ID сообщения для будущих редактирований
+        chatMessages.set(chatId, message.message_id);
+        console.log(`💾 Сохранён ID сообщения ${message.message_id} для чата ${chatId}`);
+    }).catch(error => {
+        console.log(`❌ Ошибка отправки сообщения в чат ${chatId}:`, error.message);
+    });
 }
 
 // Запуск глобального таймера

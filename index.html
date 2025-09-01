@@ -20,8 +20,7 @@
     <meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">
     <meta name="twitter:image" content="/timer-image">
     
-    <!-- Обновление страницы каждую минуту для нового превью -->
-    <meta http-equiv="refresh" content="60">
+    <!-- Удален автоматический refresh для улучшения UX -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -87,16 +86,20 @@
 </head>
 <body>
     <div class="timer-container">
-        <div class="timer-label">Таймер работает уже:</div>
+        <div class="timer-label">⏰ До 11 сентября 2025 осталось:</div>
         <div class="timer-display" id="timer">00:00:00</div>
-        <div class="status" id="status">Таймер запущен автоматически</div>
+        <div class="status" id="status">Загрузка...</div>
+        
+        <div class="status" id="info" style="font-size: 0.9em; margin-top: 10px;"></div>
     </div>
 
     <script>
-        // Время запуска страницы (всегда начинаем с 0)
-        const startTime = Date.now();
+        let targetDate = null;
+        let timeOffset = 0; // Разница времени между клиентом и сервером
 
         function formatTime(ms) {
+            if (ms <= 0) return "00:00:00";
+            
             const totalSeconds = Math.floor(ms / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -106,18 +109,59 @@
         }
 
         function updateTimer() {
-            const elapsedTime = Date.now() - startTime;
-            document.getElementById('timer').textContent = formatTime(elapsedTime);
+            if (targetDate === null) return;
+            
+            const now = Date.now() + timeOffset;
+            const remaining = Math.max(0, targetDate - now);
+            
+            document.getElementById('timer').textContent = formatTime(remaining);
+            
+            // Показать сообщение, если время истекло
+            if (remaining === 0) {
+                document.getElementById('status').textContent = '🎉 11 сентября 2025 наступило!';
+            }
         }
 
-        // Запускаем таймер сразу при загрузке
-        updateTimer(); // Сразу показываем 00:00:00
-        setInterval(updateTimer, 1000); // Обновляем каждую секунду
+        // Функция для синхронизации времени с сервером
+        async function syncWithServer() {
+            try {
+                const startSync = Date.now();
+                const response = await fetch('/api/time');
+                const endSync = Date.now();
+                const networkDelay = (endSync - startSync) / 2;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    targetDate = data.targetDate;
+                    
+                    // Корректируем время с учетом задержки сети
+                    timeOffset = data.currentTime - endSync + networkDelay;
+                    
+                    document.getElementById('status').textContent = 'Синхронизировано с сервером';
+                    document.getElementById('info').textContent = `Целевая дата: ${data.targetDateFormatted} | Последняя синхронизация: ${new Date().toLocaleTimeString('ru-RU')}`;
+                    
+                    return true;
+                }
+            } catch (error) {
+                console.error('Ошибка синхронизации:', error);
+                document.getElementById('status').textContent = 'Ошибка синхронизации';
+                return false;
+            }
+        }
 
-        // Обновляем статус через 1 секунду
-        setTimeout(() => {
-            document.getElementById('status').textContent = 'Работает непрерывно с момента запуска';
-        }, 1000);
+        // Инициализация при загрузке страницы
+        async function initialize() {
+            await syncWithServer();
+            
+            // Обновляем таймер каждую секунду
+            setInterval(updateTimer, 1000);
+            
+            // Синхронизируемся с сервером каждые 5 минут
+            setInterval(syncWithServer, 5 * 60 * 1000);
+        }
+
+        // Запускаем инициализацию
+        initialize();
     </script>
 </body>
 </html>

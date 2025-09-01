@@ -166,9 +166,15 @@ app.get('/refresh', (req, res) => {
     html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}?t=${Date.now()}"`);
     html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}?t=${Date.now()}">`);
     
-    // Добавляем текущее время в заголовок и описание
-    html = html.replace('content="🕐 Живой таймер"', `content="⏰ До 11.09.2025: ${formattedTime}"`);
-    html = html.replace('content="Таймер, который обновляется в реальном времени каждую минуту"', `content="До 11 сентября 2025 осталось: ${formattedTime} | ${new Date().toLocaleTimeString('ru-RU')}"`);
+    // Добавляем текущее время в заголовок и описание (используем точные совпадения)
+    html = html.replace('<meta property="og:title" content="🕐 Живой таймер">', 
+                       `<meta property="og:title" content="⏰ До 11.09.2025: ${formattedTime}">`);
+    html = html.replace('<meta property="og:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
+                       `<meta property="og:description" content="До 11 сентября 2025 осталось: ${formattedTime} | ${new Date().toLocaleTimeString('ru-RU')}"`);
+    html = html.replace('<meta name="twitter:title" content="🕐 Живой таймер">', 
+                       `<meta name="twitter:title" content="⏰ До 11.09.2025: ${formattedTime}">`);
+    html = html.replace('<meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
+                       `<meta name="twitter:description" content="До 11 сентября 2025 осталось: ${formattedTime} | ${new Date().toLocaleTimeString('ru-RU')}"`);
     
     // Заголовки для предотвращения кэширования
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -197,10 +203,11 @@ app.get('/', (req, res) => {
     html = html.replace(/content="\/timer-image"/g, `content="${imageUrl}"`);
     html = html.replace('<meta name="twitter:image" content="/timer-image">', `<meta name="twitter:image" content="${imageUrl}">`);
     
-    // Обновляем заголовки с актуальным временем обратного отсчета
-    html = html.replace('content="🕐 Живой таймер"', `content="⏰ До 11.09.2025: ${currentTime}"`);
-    html = html.replace('content="Таймер, который обновляется в реальном времени каждую минуту"', 
-                       `content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}"`);
+    // Обновляем заголовки с актуальным временем обратного отсчета (используем точные совпадения)
+    html = html.replace('<meta property="og:title" content="🕐 Живой таймер">', 
+                       `<meta property="og:title" content="⏰ До 11.09.2025: ${currentTime}">`);
+    html = html.replace('<meta property="og:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 
+                       `<meta property="og:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">`);
     html = html.replace('<meta name="twitter:title" content="🕐 Живой таймер">', 
                        `<meta name="twitter:title" content="⏰ До 11.09.2025: ${currentTime}">`);
     html = html.replace('<meta name="twitter:description" content="Таймер, который обновляется в реальном времени каждую минуту">', 

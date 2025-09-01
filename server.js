@@ -6,6 +6,19 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Базовый URL для генерации ссылок
+const BASE_URL = process.env.BASE_URL || 'https://lehagigachad.ru';
+
+// Middleware для перенаправления на HTTPS (если запрос пришел по HTTP)
+app.use((req, res, next) => {
+    // Проверяем, если запрос пришел по HTTP и мы в продакшене
+    if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
+        res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+        next();
+    }
+});
+
 // Целевая дата - 11 сентября 2025 года
 const TARGET_DATE = new Date('2025-09-11T00:00:00.000Z').getTime();
 
@@ -149,11 +162,21 @@ app.get('/api/target', (req, res) => {
     });
 });
 
-// Маршрут для проверки meta тегов
-app.get('/debug/meta', (req, res) => {
+// Функция для получения базового URL
+function getBaseUrl(req) {
+    // В продакшене всегда используем домен
+    if (process.env.NODE_ENV === 'production') {
+        return BASE_URL;
+    }
+    // В разработке используем заголовки запроса
     const protocol = req.get('x-forwarded-proto') || req.protocol;
     const host = req.get('host');
-    const fullUrl = `${protocol}://${host}`;
+    return `${protocol}://${host}`;
+}
+
+// Маршрут для проверки meta тегов
+app.get('/debug/meta', (req, res) => {
+    const fullUrl = getBaseUrl(req);
     const timestamp = Date.now();
     const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
     const remaining = getTimeRemaining();
@@ -174,15 +197,15 @@ app.get('/debug/meta', (req, res) => {
         metaTags,
         imageUrl,
         fullUrl,
-        timestamp
+        timestamp,
+        baseUrl: BASE_URL,
+        isProduction: process.env.NODE_ENV === 'production'
     });
 });
 
 // Специальная страница для принудительного обновления превью
 app.get('/preview', (req, res) => {
-    const protocol = req.get('x-forwarded-proto') || req.protocol;
-    const host = req.get('host');
-    const fullUrl = `${protocol}://${host}`;
+    const fullUrl = getBaseUrl(req);
     const timestamp = Date.now();
     const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
     const remaining = getTimeRemaining();
@@ -248,9 +271,7 @@ app.get('/preview', (req, res) => {
 
 // Специальный эндпоинт для обновления Telegram превью
 app.get('/refresh', (req, res) => {
-    const protocol = req.get('x-forwarded-proto') || req.protocol;
-    const host = req.get('host');
-    const fullUrl = `${protocol}://${host}`;
+    const fullUrl = getBaseUrl(req);
     const imageUrl = `${fullUrl}/timer-image`;
     const remaining = getTimeRemaining();
     const formattedTime = formatTime(remaining);
@@ -284,9 +305,7 @@ app.get('/refresh', (req, res) => {
 
 // Главная страница с динамическими meta тегами
 app.get('/', (req, res) => {
-    const protocol = req.get('x-forwarded-proto') || req.protocol;
-    const host = req.get('host');
-    const fullUrl = `${protocol}://${host}`;
+    const fullUrl = getBaseUrl(req);
     const timestamp = Date.now();
     const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
     const remaining = getTimeRemaining();
@@ -341,12 +360,14 @@ async function saveTimerImage() {
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
-    console.log(`Открыть в браузере: http://localhost:${PORT}`);
-    console.log(`Изображение таймера: http://localhost:${PORT}/timer-image`);
-    console.log(`SVG таймера: http://localhost:${PORT}/timer-svg`);
-    console.log(`Целевая дата: ${new Date(TARGET_DATE).toLocaleString('ru-RU')}`);
-    console.log(`До 11 сентября 2025 осталось: ${formatTime(getTimeRemaining())}`);
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
+    console.log(`🌐 Основной URL: ${BASE_URL}`);
+    console.log(`🔧 Режим: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📸 Изображение таймера: ${BASE_URL}/timer-image`);
+    console.log(`🎯 Целевая дата: ${new Date(TARGET_DATE).toLocaleString('ru-RU')}`);
+    console.log(`⏰ До 11 сентября 2025 осталось: ${formatTime(getTimeRemaining())}`);
+    console.log(`📱 Превью страница: ${BASE_URL}/preview`);
+    console.log(`🔍 Отладка meta тегов: ${BASE_URL}/debug/meta`);
     
     // Создаем первое изображение
     saveTimerImage();

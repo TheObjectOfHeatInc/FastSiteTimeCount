@@ -7,6 +7,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - BASE_URL=https://lehagigachad.ru
     volumes:
       - ./images:/app/images
     restart: unless-stopped

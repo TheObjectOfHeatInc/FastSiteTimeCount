@@ -21,8 +21,11 @@ case "$1" in
         echo "🔨 Сборка и запуск..."
         docker-compose down
         docker-compose build
+        # Устанавливаем переменные окружения для продакшена
+        export NODE_ENV=production
+        export BASE_URL=https://lehagigachad.ru
         docker-compose up -d
-        echo "✅ Запущено на http://localhost:3000"
+        echo "✅ Запущено на https://lehagigachad.ru"
         ;;
     "stop")
         echo "🛑 Остановка..."

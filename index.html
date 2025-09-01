@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер</title>
+    
+    <!-- Мета-теги для превью в Telegram -->
+    <meta property="og:title" content="Таймер">
+    <meta property="og:description" content="Текущее время: <span id='preview-time'>Загрузка...</span>">
+    <meta property="og:image" content="timer-image.html">
+    <meta property="og:url" content="">
+    <meta property="og:type" content="website">
+    
+    <!-- Telegram специфичные теги -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Таймер">
+    <meta name="twitter:description" content="Текущее время: <span id='preview-time'>Загрузка...</span>">
+    <meta name="twitter:image" content="timer-image.html">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Таймер</h1>
+        <div class="timer-display">
+            <div class="time" id="time">00:00:00</div>
+            <div class="date" id="date">01.01.2024</div>
+        </div>
+        <div class="info">
+            <p>Этот таймер обновляется каждую минуту и генерирует картинку для превью в Telegram</p>
+            <p>Скопируй ссылку на эту страницу и отправь в Telegram - увидишь превью с текущим временем!</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

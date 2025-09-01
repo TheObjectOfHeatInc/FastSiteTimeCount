@@ -612,8 +612,6 @@ app.get('/timer/:timestamp', (req, res) => {
     <title>⏰ ${currentTime} до 11.09.2025</title>
     
     <!-- Open Graph теги -->
-    <meta property="og:title" content="⏰ Осталось: ${currentTime}">
-    <meta property="og:description" content="До 11 сентября 2025 года осталось ${currentTime}. Обновляется каждую секунду!">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:image:width" content="800">
     <meta property="og:image:height" content="400">
@@ -622,8 +620,6 @@ app.get('/timer/:timestamp', (req, res) => {
     
     <!-- Twitter теги -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="⏰ Осталось: ${currentTime}">
-    <meta name="twitter:description" content="До 11 сентября 2025: ${currentTime}">
     <meta name="twitter:image" content="${imageUrl}">
     
     <style>

@@ -149,6 +149,103 @@ app.get('/api/target', (req, res) => {
     });
 });
 
+// Маршрут для проверки meta тегов
+app.get('/debug/meta', (req, res) => {
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    const fullUrl = `${protocol}://${host}`;
+    const timestamp = Date.now();
+    const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    
+    const metaTags = {
+        'og:title': `⏰ До 11.09.2025: ${currentTime}`,
+        'og:description': `До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}`,
+        'og:image': imageUrl,
+        'og:url': `${fullUrl}?t=${timestamp}`,
+        'twitter:title': `⏰ До 11.09.2025: ${currentTime}`,
+        'twitter:description': `До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}`,
+        'twitter:image': imageUrl
+    };
+    
+    res.json({
+        currentTime,
+        metaTags,
+        imageUrl,
+        fullUrl,
+        timestamp
+    });
+});
+
+// Специальная страница для принудительного обновления превью
+app.get('/preview', (req, res) => {
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    const fullUrl = `${protocol}://${host}`;
+    const timestamp = Date.now();
+    const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ До 11.09.2025: ${currentTime}</title>
+    
+    <!-- Open Graph теги для превью -->
+    <meta property="og:title" content="⏰ До 11.09.2025: ${currentTime}">
+    <meta property="og:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${fullUrl}/preview?t=${timestamp}">
+    
+    <!-- Twitter теги -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="⏰ До 11.09.2025: ${currentTime}">
+    <meta name="twitter:description" content="До 11 сентября 2025 осталось: ${currentTime} | ${new Date().toLocaleString('ru-RU')}">
+    <meta name="twitter:image" content="${imageUrl}">
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .timer { font-size: 3em; margin: 20px 0; }
+        .info { font-size: 1.2em; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <h1>⏰ До 11 сентября 2025 осталось:</h1>
+    <div class="timer">${currentTime}</div>
+    <div class="info">Обновлено: ${new Date().toLocaleString('ru-RU')}</div>
+    <div class="info">Ссылка создана специально для превью в Telegram</div>
+    <script>
+        // Автоматическое обновление каждую секунду
+        setTimeout(() => window.location.reload(), 60000);
+    </script>
+</body>
+</html>`;
+
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.send(html);
+});
+
 // Специальный эндпоинт для обновления Telegram превью
 app.get('/refresh', (req, res) => {
     const protocol = req.get('x-forwarded-proto') || req.protocol;

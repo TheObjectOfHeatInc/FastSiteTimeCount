@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "sharp": "^0.33.0"
+    "sharp": "^0.33.0",
+    "node-telegram-bot-api": "^0.66.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

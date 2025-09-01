@@ -2,6 +2,7 @@ const express = require('express');
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
+const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,11 +23,153 @@ app.use((req, res, next) => {
 // Целевая дата - 11 сентября 2025 года
 const TARGET_DATE = new Date('2025-09-11T00:00:00.000Z').getTime();
 
+// Настройки Telegram бота
+const BOT_TOKEN = process.env.BOT_TOKEN; // Получим от @BotFather
+let bot = null;
+const activeChats = new Set(); // Чаты где бот активен
+let timerInterval = null;
+
 // Функция для получения времени до целевой даты
 function getTimeRemaining() {
     const now = Date.now();
     const remaining = TARGET_DATE - now;
     return Math.max(0, remaining); // Не показываем отрицательное время
+}
+
+// Инициализация Telegram бота
+function initTelegramBot() {
+    if (!BOT_TOKEN) {
+        console.log('⚠️ BOT_TOKEN не найден. Бот отключен.');
+        return;
+    }
+
+    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    console.log('🤖 Telegram бот инициализирован');
+
+    // Команда /start
+    bot.onText(/\/start/, (msg) => {
+        const chatId = msg.chat.id;
+        bot.sendMessage(chatId, `🎯 Привет! Я бот таймера до 11.09.2025!
+        
+Команды:
+🚀 /timer - начать отправку обновлений каждую минуту
+⏹️ /stop - остановить обновления
+📊 /status - текущий статус
+⏰ /time - показать текущее время
+
+Напиши "СТАРТУЕМ!" для быстрого запуска`);
+    });
+
+    // Команда /timer
+    bot.onText(/\/timer/, (msg) => {
+        const chatId = msg.chat.id;
+        startTimerForChat(chatId);
+    });
+
+    // Команда /stop
+    bot.onText(/\/stop/, (msg) => {
+        const chatId = msg.chat.id;
+        stopTimerForChat(chatId);
+    });
+
+    // Команда /status
+    bot.onText(/\/status/, (msg) => {
+        const chatId = msg.chat.id;
+        const isActive = activeChats.has(chatId);
+        const remaining = getTimeRemaining();
+        const currentTime = formatTime(remaining);
+        
+        bot.sendMessage(chatId, `📊 Статус:
+${isActive ? '✅ Таймер активен' : '❌ Таймер остановлен'}
+⏰ До 11.09.2025 осталось: ${currentTime}
+👥 Активных чатов: ${activeChats.size}`);
+    });
+
+    // Команда /time
+    bot.onText(/\/time/, (msg) => {
+        const chatId = msg.chat.id;
+        sendCurrentTimer(chatId);
+    });
+
+    // Быстрая команда "СТАРТУЕМ!"
+    bot.onText(/СТАРТУЕМ!/i, (msg) => {
+        const chatId = msg.chat.id;
+        startTimerForChat(chatId);
+    });
+
+    // Быстрая команда "стоп!"
+    bot.onText(/стоп!/i, (msg) => {
+        const chatId = msg.chat.id;
+        stopTimerForChat(chatId);
+    });
+}
+
+// Запуск таймера для чата
+function startTimerForChat(chatId) {
+    activeChats.add(chatId);
+    
+    bot.sendMessage(chatId, `🚀 Таймер запущен! Буду отправлять обновления каждую минуту.
+    
+⏰ Первая ссылка сейчас:`);
+    
+    // Отправляем первую ссылку сразу
+    sendCurrentTimer(chatId);
+    
+    // Запускаем глобальный таймер если его нет
+    if (!timerInterval && activeChats.size > 0) {
+        startGlobalTimer();
+    }
+}
+
+// Остановка таймера для чата
+function stopTimerForChat(chatId) {
+    activeChats.delete(chatId);
+    
+    bot.sendMessage(chatId, `⏹️ Таймер остановлен для этого чата.
+    
+Чтобы возобновить, напиши "СТАРТУЕМ!" или /timer`);
+    
+    // Останавливаем глобальный таймер если нет активных чатов
+    if (activeChats.size === 0 && timerInterval) {
+        stopGlobalTimer();
+    }
+}
+
+// Отправка текущего таймера
+function sendCurrentTimer(chatId) {
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    const timestamp = Date.now();
+    const timerUrl = `${BASE_URL}/timer/${timestamp}`;
+    
+    bot.sendMessage(chatId, `⏰ До 11 сентября 2025 осталось: **${currentTime}**
+    
+🔗 Актуальная ссылка:
+${timerUrl}`, { parse_mode: 'Markdown' });
+}
+
+// Запуск глобального таймера
+function startGlobalTimer() {
+    console.log('🕐 Запущен глобальный таймер обновлений');
+    
+    timerInterval = setInterval(() => {
+        if (activeChats.size > 0) {
+            console.log(`📢 Отправка обновлений в ${activeChats.size} чатов`);
+            
+            activeChats.forEach(chatId => {
+                sendCurrentTimer(chatId);
+            });
+        }
+    }, 60000); // Каждую минуту
+}
+
+// Остановка глобального таймера
+function stopGlobalTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        console.log('🛑 Глобальный таймер остановлен');
+    }
 }
 
 // Настройка статических файлов
@@ -346,22 +489,113 @@ app.get('/force-update', (req, res) => {
     res.json({
         currentTime,
         remaining,
-        newTimerUrl: `${fullUrl}/timer/${timestamp}`,
+        liveUrl: `${fullUrl}/live`,
         instructions: [
-            "🚀 НОВЫЙ МЕТОД - отправьте эту ссылку:",
-            `${fullUrl}/timer/${timestamp}`,
+            "🔴 ЛУЧШИЙ СПОСОБ - используйте LIVE ссылку:",
+            `${fullUrl}/live`,
             "",
-            "📋 Или старым способом боту @WebpageBot:",
-            `${fullUrl}/preview?t=${timestamp}`,
+            "✅ Отправьте эту ссылку боту @WebpageBot ОДИН раз:",
+            `${fullUrl}/live`,
             "",
-            "💡 Каждая ссылка уникальна и должна обойти кэш!"
+            "🎯 После этого превью будет обновляться АВТОМАТИЧЕСКИ каждые 30 секунд!",
+            "",
+            "📝 Одноразовая ссылка (если LIVE не работает):",
+            `${fullUrl}/timer/${timestamp}`
         ],
         imageUrl: `${fullUrl}/timer-image?v=${timestamp}`,
-        tip: "Используйте /timer/ ссылки - они должны лучше работать"
+        tip: "LIVE ссылка обновляется сама - настройте её один раз!"
     });
 });
 
-// Динамический таймер для обхода кэша Telegram
+// Постоянная ссылка которая обновляется каждую минуту
+app.get('/live', (req, res) => {
+    const fullUrl = getBaseUrl(req);
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    // Обновляется каждые 30 секунд (30000 мс)
+    const minuteTimestamp = Math.floor(Date.now() / 30000);
+    const imageUrl = `${fullUrl}/timer-image?live=${minuteTimestamp}&time=${currentTime.replace(/:/g, '-')}`;
+    
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ ${currentTime} до 11.09.2025</title>
+    
+    <!-- Open Graph теги -->
+    <meta property="og:title" content="⏰ Осталось: ${currentTime}">
+    <meta property="og:description" content="До 11 сентября 2025 года осталось ${currentTime}. Автообновление каждую минуту!">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${fullUrl}/live?v=${minuteTimestamp}">
+    
+    <!-- Twitter теги -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="⏰ Осталось: ${currentTime}">
+    <meta name="twitter:description" content="До 11 сентября 2025: ${currentTime} (автообновление)">
+    <meta name="twitter:image" content="${imageUrl}">
+    
+    <!-- Принудительное обновление каждые 30 секунд -->
+    <meta http-equiv="refresh" content="30">
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .timer { 
+            font-size: 4em; 
+            margin: 20px 0; 
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .info { 
+            font-size: 1.5em; 
+            opacity: 0.9; 
+            margin: 10px 0;
+        }
+        .live { 
+            color: #00ff00; 
+            font-size: 1.2em;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <h1>⏰ До 11 сентября 2025 осталось:</h1>
+    <div class="timer">${currentTime}</div>
+    <div class="info">Цель: 11.09.2025</div>
+    <div class="live">🔴 LIVE - обновляется каждые 30 секунд</div>
+    <div class="info">Minute ID: ${minuteTimestamp}</div>
+</body>
+</html>`;
+
+    // Очень агрессивные анти-кэш заголовки
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.setHeader('ETag', `"live-${minuteTimestamp}"`);
+    res.setHeader('Vary', '*');
+    res.send(html);
+});
+
+// Динамический таймер для разовых ссылок
 app.get('/timer/:timestamp', (req, res) => {
     const fullUrl = getBaseUrl(req);
     const remaining = getTimeRemaining();
@@ -653,6 +887,9 @@ app.listen(PORT, () => {
     
     // Устанавливаем интервал обновления каждую минуту (60000 мс)
     setInterval(saveTimerImage, 60000);
+    
+    // Запускаем Telegram бота
+    initTelegramBot();
 });
 
 module.exports = app;

@@ -4,17 +4,24 @@ FROM node:18-alpine
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем системные зависимости для Sharp
+# Устанавливаем системные зависимости для Sharp и шрифты
 RUN apk add --no-cache \
     vips-dev \
     pkgconfig \
     build-base \
     python3 \
     make \
-    g++
+    g++ \
+    fontconfig \
+    ttf-dejavu \
+    ttf-liberation \
+    ttf-opensans
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./
+
+# Обновляем кэш шрифтов
+RUN fc-cache -f -v
 
 # Устанавливаем зависимости
 RUN npm ci --only=production

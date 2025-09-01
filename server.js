@@ -70,15 +70,15 @@ function createTimerSVG() {
     <!-- Встроенный шрифт для цифр -->
     <style type="text/css"><![CDATA[
       .timer-font { 
-        font-family: 'Courier New', 'DejaVu Sans Mono', monospace; 
+        font-family: 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace; 
         font-weight: bold;
       }
       .title-font { 
-        font-family: 'Arial', 'Helvetica', sans-serif; 
+        font-family: 'DejaVu Sans', 'Liberation Sans', 'Open Sans', sans-serif; 
         font-weight: bold;
       }
       .info-font { 
-        font-family: 'Arial', 'Helvetica', sans-serif; 
+        font-family: 'DejaVu Sans', 'Liberation Sans', 'Open Sans', sans-serif; 
         font-weight: normal;
       }
     ]]></style>
@@ -185,6 +185,56 @@ app.get('/api/target', (req, res) => {
         targetDateFormatted: new Date(TARGET_DATE).toLocaleString('ru-RU'),
         description: 'Обратный отсчет до 11 сентября 2025 года'
     });
+});
+
+// Тестовый маршрут для проверки шрифтов
+app.get('/test-fonts', async (req, res) => {
+    try {
+        const testSVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="400" fill="#667eea"/>
+  
+  <text x="400" y="80" text-anchor="middle" fill="white" 
+        font-family="DejaVu Sans, sans-serif" font-size="24" font-weight="bold">
+    Тест шрифтов в Docker
+  </text>
+  
+  <text x="400" y="150" text-anchor="middle" fill="white" 
+        font-family="DejaVu Sans Mono, monospace" font-size="48" font-weight="bold">
+    123:45:67
+  </text>
+  
+  <text x="400" y="220" text-anchor="middle" fill="white" 
+        font-family="Liberation Sans, sans-serif" font-size="32">
+    Liberation: 12:34:56
+  </text>
+  
+  <text x="400" y="280" text-anchor="middle" fill="white" 
+        font-family="Open Sans, sans-serif" font-size="32">
+    Open Sans: 98:76:54
+  </text>
+  
+  <text x="400" y="340" text-anchor="middle" fill="white" 
+        font-family="serif" font-size="32">
+    Fallback serif: 11:22:33
+  </text>
+</svg>`;
+
+        const pngBuffer = await sharp(Buffer.from(testSVG, 'utf8'), {
+            density: 300
+        })
+            .png({
+                quality: 100,
+                compressionLevel: 6
+            })
+            .toBuffer();
+
+        res.setHeader('Content-Type', 'image/png');
+        res.send(pngBuffer);
+    } catch (error) {
+        console.error('Ошибка тестового изображения:', error);
+        res.status(500).send('Ошибка создания тестового изображения');
+    }
 });
 
 // Функция для получения базового URL

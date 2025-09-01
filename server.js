@@ -336,6 +336,27 @@ app.get('/test-fonts', async (req, res) => {
     }
 });
 
+// Специальный маршрут для принудительного обновления кэша Telegram
+app.get('/force-update', (req, res) => {
+    const fullUrl = getBaseUrl(req);
+    const remaining = getTimeRemaining();
+    const currentTime = formatTime(remaining);
+    const forceId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    
+    res.json({
+        currentTime,
+        remaining,
+        forceUpdateUrl: `${fullUrl}/preview?force=${forceId}`,
+        instructions: [
+            "1. Отправьте эту ссылку боту @WebpageBot в Telegram:",
+            `${fullUrl}/preview?force=${forceId}`,
+            "2. Или используйте в любом чате Telegram для обновления превью"
+        ],
+        imageUrl: `${fullUrl}/timer-image?force=${forceId}`,
+        tip: "Каждый запрос генерирует уникальную ссылку для обхода кэша"
+    });
+});
+
 // Функция для получения базового URL
 function getBaseUrl(req) {
     // В продакшене всегда используем домен
@@ -380,10 +401,11 @@ app.get('/debug/meta', (req, res) => {
 // Специальная страница для принудительного обновления превью
 app.get('/preview', (req, res) => {
     const fullUrl = getBaseUrl(req);
-    const timestamp = Date.now();
-    const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
     const remaining = getTimeRemaining();
     const currentTime = formatTime(remaining);
+    const timestamp = Date.now();
+    // Уникальный URL для каждой минуты + случайный параметр
+    const imageUrl = `${fullUrl}/timer-image?v=${Math.floor(timestamp / 60000)}&r=${Math.random().toString(36).substr(2, 9)}&time=${currentTime.replace(/:/g, '-')}`;
     
     const html = `<!DOCTYPE html>
 <html lang="ru">
@@ -399,7 +421,7 @@ app.get('/preview', (req, res) => {
     <meta property="og:image:width" content="800">
     <meta property="og:image:height" content="400">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="${fullUrl}/preview?t=${timestamp}">
+    <meta property="og:url" content="${fullUrl}/preview?v=${Math.floor(timestamp / 60000)}&r=${Math.random().toString(36).substr(2, 5)}">
     
     <!-- Twitter теги -->
     <meta name="twitter:card" content="summary_large_image">
@@ -446,9 +468,10 @@ app.get('/preview', (req, res) => {
 // Специальный эндпоинт для обновления Telegram превью
 app.get('/refresh', (req, res) => {
     const fullUrl = getBaseUrl(req);
-    const imageUrl = `${fullUrl}/timer-image`;
     const remaining = getTimeRemaining();
     const formattedTime = formatTime(remaining);
+    const timestamp = Date.now();
+    const imageUrl = `${fullUrl}/timer-image?v=${Math.floor(timestamp / 60000)}&r=${Math.random().toString(36).substr(2, 9)}&time=${formattedTime.replace(/:/g, '-')}`;
     
     // Читаем HTML файл
     let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
@@ -480,10 +503,11 @@ app.get('/refresh', (req, res) => {
 // Главная страница с динамическими meta тегами
 app.get('/', (req, res) => {
     const fullUrl = getBaseUrl(req);
-    const timestamp = Date.now();
-    const imageUrl = `${fullUrl}/timer-image?t=${timestamp}`;
     const remaining = getTimeRemaining();
     const currentTime = formatTime(remaining);
+    // Генерируем уникальный timestamp каждую минуту
+    const minuteTimestamp = Math.floor(Date.now() / 60000) * 60000;
+    const imageUrl = `${fullUrl}/timer-image?v=${minuteTimestamp}&time=${currentTime.replace(/:/g, '-')}`;
     
     // Читаем HTML файл
     let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');

@@ -52,7 +52,12 @@ function createTimerSVG() {
     const formattedTime = formatTime(remaining);
     const targetDate = new Date(TARGET_DATE).toLocaleDateString('ru-RU');
     
-    return `
+    // Экранируем специальные символы для SVG
+    const safeFormattedTime = formattedTime.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeCurrentTime = currentTime.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeTargetDate = targetDate.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -62,6 +67,21 @@ function createTimerSVG() {
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.5)"/>
     </filter>
+    <!-- Встроенный шрифт для цифр -->
+    <style type="text/css"><![CDATA[
+      .timer-font { 
+        font-family: 'Courier New', 'DejaVu Sans Mono', monospace; 
+        font-weight: bold;
+      }
+      .title-font { 
+        font-family: 'Arial', 'Helvetica', sans-serif; 
+        font-weight: bold;
+      }
+      .info-font { 
+        font-family: 'Arial', 'Helvetica', sans-serif; 
+        font-weight: normal;
+      }
+    ]]></style>
   </defs>
   
   <!-- Фон -->
@@ -71,34 +91,34 @@ function createTimerSVG() {
   <rect x="50" y="50" width="700" height="300" fill="rgba(255,255,255,0.1)" rx="20"/>
   
   <!-- Заголовок -->
-  <text x="400" y="100" text-anchor="middle" fill="white" font-family="Arial, sans-serif" 
-        font-size="28" font-weight="bold" filter="url(#shadow)">
-    ⏰ До 11 сентября 2025 осталось:
+  <text x="400" y="100" text-anchor="middle" fill="white" class="title-font"
+        font-size="26" filter="url(#shadow)">
+    До 11 сентября 2025 осталось:
   </text>
   
   <!-- Время -->
-  <text x="400" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" 
-        font-size="58" font-weight="bold" filter="url(#shadow)">
-    ${formattedTime}
+  <text x="400" y="180" text-anchor="middle" fill="white" class="timer-font"
+        font-size="64" filter="url(#shadow)">
+    ${safeFormattedTime}
   </text>
   
   <!-- Подпись -->
   <text x="400" y="250" text-anchor="middle" fill="rgba(255,255,255,0.8)" 
-        font-family="Arial, sans-serif" font-size="20">
-    Целевая дата: ${targetDate}
+        class="info-font" font-size="18">
+    Целевая дата: ${safeTargetDate}
   </text>
   
   <!-- Время обновления -->
-  <text x="400" y="310" text-anchor="middle" fill="rgba(255,255,255,0.6)" 
-        font-family="Arial, sans-serif" font-size="18">
-    Обновлено: ${currentTime}
+  <text x="400" y="280" text-anchor="middle" fill="rgba(255,255,255,0.6)" 
+        class="info-font" font-size="16">
+    Обновлено: ${safeCurrentTime}
   </text>
   
   <!-- Декоративные элементы -->
-  <circle cx="150" cy="350" r="4" fill="rgba(255,255,255,0.3)"/>
-  <circle cx="650" cy="350" r="4" fill="rgba(255,255,255,0.3)"/>
-  <circle cx="200" cy="60" r="3" fill="rgba(255,255,255,0.4)"/>
-  <circle cx="600" cy="60" r="3" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="150" cy="330" r="4" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="650" cy="330" r="4" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="200" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="600" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
 </svg>`;
 }
 
@@ -107,9 +127,14 @@ app.get('/timer-image', async (req, res) => {
     try {
         const svgString = createTimerSVG();
         
-        // Конвертируем SVG в PNG с помощью Sharp
-        const pngBuffer = await sharp(Buffer.from(svgString))
-            .png()
+        // Конвертируем SVG в PNG с помощью Sharp с явной настройкой плотности
+        const pngBuffer = await sharp(Buffer.from(svgString, 'utf8'), {
+            density: 300  // Высокая плотность для четкого текста
+        })
+            .png({
+                quality: 100,
+                compressionLevel: 6
+            })
             .toBuffer();
         
         // Устанавливаем заголовки для изображения
@@ -345,16 +370,21 @@ async function saveTimerImage() {
         const remaining = getTimeRemaining();
         const svgString = createTimerSVG();
         
-        // Создаем PNG с помощью Sharp
-        const pngBuffer = await sharp(Buffer.from(svgString))
-            .png()
+        // Создаем PNG с помощью Sharp с улучшенными настройками
+        const pngBuffer = await sharp(Buffer.from(svgString, 'utf8'), {
+            density: 300
+        })
+            .png({
+                quality: 100,
+                compressionLevel: 6
+            })
             .toBuffer();
         
         // Сохраняем в файл
         fs.writeFileSync('timer-preview.png', pngBuffer);
-        console.log(`Изображение обновлено. До 11.09.2025 осталось: ${formatTime(remaining)}`);
+        console.log(`📸 Изображение обновлено. До 11.09.2025 осталось: ${formatTime(remaining)}`);
     } catch (error) {
-        console.error('Ошибка сохранения изображения:', error);
+        console.error('❌ Ошибка сохранения изображения:', error);
     }
 }
 

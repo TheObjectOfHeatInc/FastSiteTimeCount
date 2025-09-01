@@ -23,145 +23,60 @@
     <!-- Удален автоматический refresh для улучшения UX -->
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .timer-container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: #000;
+            color: #fff;
         }
         
         .timer-display {
-            font-size: 3em;
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 8vw;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            text-align: center;
         }
         
-        .timer-label {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-        
-        .controls {
-            margin-top: 30px;
-        }
-        
-        button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 12px 24px;
-            margin: 0 10px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .status {
-            margin-top: 20px;
-            font-size: 1.1em;
-            opacity: 0.8;
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 12vw;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="timer-container">
-        <div class="timer-label">⏰ До 11 сентября 2025 осталось:</div>
-        <div class="timer-display" id="timer">00:00:00</div>
-        <div class="status" id="status">Загрузка...</div>
-        
-        <div class="status" id="info" style="font-size: 0.9em; margin-top: 10px;"></div>
-    </div>
+    <div class="timer-display" id="timer">00:00:00</div>
 
     <script>
         let targetDate = null;
-        let timeOffset = 0; // Разница времени между клиентом и сервером
 
         function formatTime(ms) {
             if (ms <= 0) return "00:00:00";
-            
             const totalSeconds = Math.floor(ms / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-            
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         function updateTimer() {
-            if (targetDate === null) return;
-            
-            const now = Date.now() + timeOffset;
-            const remaining = Math.max(0, targetDate - now);
-            
+            if (!targetDate) return;
+            const remaining = Math.max(0, targetDate - Date.now());
             document.getElementById('timer').textContent = formatTime(remaining);
-            
-            // Показать сообщение, если время истекло
-            if (remaining === 0) {
-                document.getElementById('status').textContent = '🎉 11 сентября 2025 наступило!';
-            }
         }
 
-        // Функция для синхронизации времени с сервером
-        async function syncWithServer() {
-            try {
-                const startSync = Date.now();
-                const response = await fetch('/api/time');
-                const endSync = Date.now();
-                const networkDelay = (endSync - startSync) / 2;
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    targetDate = data.targetDate;
-                    
-                    // Корректируем время с учетом задержки сети
-                    timeOffset = data.currentTime - endSync + networkDelay;
-                    
-                    document.getElementById('status').textContent = 'Синхронизировано с сервером';
-                    document.getElementById('info').textContent = `Целевая дата: ${data.targetDateFormatted} | Последняя синхронизация: ${new Date().toLocaleTimeString('ru-RU')}`;
-                    
-                    return true;
-                }
-            } catch (error) {
-                console.error('Ошибка синхронизации:', error);
-                document.getElementById('status').textContent = 'Ошибка синхронизации';
-                return false;
-            }
-        }
-
-        // Инициализация при загрузке страницы
-        async function initialize() {
-            await syncWithServer();
-            
-            // Обновляем таймер каждую секунду
+        async function init() {
+            const res = await fetch('/api/time');
+            const data = await res.json();
+            targetDate = data.targetDate;
             setInterval(updateTimer, 1000);
-            
-            // Синхронизируемся с сервером каждые 5 минут
-            setInterval(syncWithServer, 5 * 60 * 1000);
         }
 
-        // Запускаем инициализацию
-        initialize();
+        init();
     </script>
 </body>
 </html>

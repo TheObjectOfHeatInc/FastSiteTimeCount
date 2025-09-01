@@ -165,52 +165,16 @@ ${isActive ? '✅ Таймер активен' : '❌ Таймер остано�
         stopTimerForChat(chatId);
     });
 
-    // Обработчик всех сообщений
+    // Логирование всех сообщений (без ответов)
     bot.on('message', (msg) => {
         console.log('📨 ПОЛУЧЕНО СООБЩЕНИЕ:');
         console.log('  👤 От:', msg.from?.username || msg.from?.first_name || 'Неизвестный');
         console.log('  💬 Чат:', msg.chat.type, '|', msg.chat.title || msg.chat.first_name || 'Личка');
         console.log('  📝 Текст:', msg.text || 'НЕТ ТЕКСТА');
         console.log('  🆔 Chat ID:', msg.chat.id);
-        console.log('  ⏰ Время:', new Date().toLocaleString());
         console.log('---');
         
-        const chatId = msg.chat.id;
-        const text = msg.text;
-        
-        // Проверяем специальные команды, которые уже обработаны выше
-        if (text && text.startsWith('/')) {
-            console.log('⏭️ Команда уже обработана:', text);
-            return;
-        }
-        
-        // Проверяем команды "Стартуем" и "стоп" - они уже обработаны
-        if (text && (/(СТАРТУЕМ!|Стартуем!|стартуем!|старт|СТАРТ)/i.test(text) || /стоп!/i.test(text))) {
-            console.log('⏭️ Быстрая команда уже обработана:', text);
-            return;
-        }
-        
-        console.log('🚀 Отправляю ответ на обычное сообщение...');
-        
-        // Отвечаем на все остальные сообщения
-        const remaining = getTimeRemaining();
-        const currentTime = formatTime(remaining);
-        
-        bot.sendMessage(chatId, `🤖 Привет! Получил твоё сообщение: "${text}"
-
-⏰ До 11 сентября 2025 осталось: ${currentTime}
-
-🚀 Хочешь запустить живой таймер? Напиши "Стартуем!" или используй команду /timer
-
-📝 Доступные команды:
-• "Стартуем!" - запустить таймер
-• "стоп!" - остановить таймер  
-• /status - проверить статус
-• /time - показать текущее время`).then(() => {
-            console.log('✅ Ответ отправлен успешно!');
-        }).catch(error => {
-            console.log('❌ Ошибка отправки ответа:', error.message);
-        });
+        // Обычные сообщения игнорируются - обрабатываются только команды
     });
 }
 
@@ -351,36 +315,12 @@ function createTimerCanvas() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Заголовок
-    ctx.font = 'bold 26px "DejaVu Sans", Arial, sans-serif';
-    ctx.fillText('До 11 сентября 2025 осталось:', width / 2, 100);
+    // Только время (огромными цифрами по центру)
+    ctx.font = 'bold 120px "DejaVu Sans Mono", "Courier New", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(formattedTime, width / 2, height / 2 + 20);
 
-    // Время (большими цифрами)
-    ctx.font = 'bold 64px "DejaVu Sans Mono", "Courier New", monospace';
-    ctx.fillText(formattedTime, width / 2, 180);
 
-    // Целевая дата
-    ctx.font = '18px "DejaVu Sans", Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fillText(`Целевая дата: ${targetDate}`, width / 2, 250);
-
-    // Время обновления
-    ctx.font = '16px "DejaVu Sans", Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.fillText(`Обновлено: ${currentTime}`, width / 2, 280);
-
-    // Декоративные точки
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.beginPath();
-    ctx.arc(150, 330, 4, 0, 2 * Math.PI);
-    ctx.arc(650, 330, 4, 0, 2 * Math.PI);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.beginPath();
-    ctx.arc(200, 80, 3, 0, 2 * Math.PI);
-    ctx.arc(600, 80, 3, 0, 2 * Math.PI);
-    ctx.fill();
 
     return canvas.toBuffer('image/png');
 }

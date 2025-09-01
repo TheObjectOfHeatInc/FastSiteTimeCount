@@ -335,66 +335,14 @@ function createTimerSVG() {
     
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.5)"/>
-    </filter>
-    <!-- Встроенный шрифт для цифр -->
-    <style type="text/css"><![CDATA[
-      .timer-font { 
-        font-family: 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace; 
-        font-weight: bold;
-      }
-      .title-font { 
-        font-family: 'DejaVu Sans', 'Liberation Sans', 'Open Sans', sans-serif; 
-        font-weight: bold;
-      }
-      .info-font { 
-        font-family: 'DejaVu Sans', 'Liberation Sans', 'Open Sans', sans-serif; 
-        font-weight: normal;
-      }
-    ]]></style>
-  </defs>
+  <!-- Чёрный фон -->
+  <rect width="800" height="400" fill="#000000"/>
   
-  <!-- Фон -->
-  <rect width="800" height="400" fill="url(#bgGradient)"/>
-  
-  <!-- Полупрозрачный контейнер -->
-  <rect x="50" y="50" width="700" height="300" fill="rgba(255,255,255,0.1)" rx="20"/>
-  
-  <!-- Заголовок -->
-  <text x="400" y="100" text-anchor="middle" fill="white" 
-        font-family="Arial, sans-serif" font-size="26" font-weight="bold">
-    TIME LEFT: 11.09.2025
-  </text>
-  
-  <!-- Время -->
-  <text x="400" y="180" text-anchor="middle" fill="white" 
-        font-family="monospace" font-size="72" font-weight="bold">
+  <!-- Только время по центру -->
+  <text x="400" y="220" text-anchor="middle" fill="white" 
+        font-family="monospace" font-size="120" font-weight="300">
     ${safeFormattedTime}
   </text>
-  
-  <!-- Подпись -->
-  <text x="400" y="250" text-anchor="middle" fill="rgba(255,255,255,0.8)" 
-        font-family="Arial, sans-serif" font-size="18">
-    TARGET: ${safeTargetDate}
-  </text>
-  
-  <!-- Время обновления -->
-  <text x="400" y="280" text-anchor="middle" fill="rgba(255,255,255,0.6)" 
-        font-family="Arial, sans-serif" font-size="16">
-    UPDATED: ${new Date().toLocaleTimeString()}
-  </text>
-  
-  <!-- Декоративные элементы -->
-  <circle cx="150" cy="330" r="4" fill="rgba(255,255,255,0.3)"/>
-  <circle cx="650" cy="330" r="4" fill="rgba(255,255,255,0.3)"/>
-  <circle cx="200" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
-  <circle cx="600" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
 </svg>`;
 }
 

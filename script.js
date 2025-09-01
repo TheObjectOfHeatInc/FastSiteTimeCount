@@ -51,12 +51,12 @@ function updateMetaTags(date) {
     
     if (ogTitle) ogTitle.setAttribute('content', `Таймер - ${timeString}`);
     if (ogDescription) ogDescription.setAttribute('content', description);
-    if (ogImage) ogImage.setAttribute('content', `timer-image.html?t=${Date.now()}`);
+    if (ogImage) ogImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-image.svg?t=${Date.now()}`);
     if (ogUrl) ogUrl.setAttribute('content', window.location.href);
     
     if (twitterTitle) twitterTitle.setAttribute('content', `Таймер - ${timeString}`);
     if (twitterDescription) twitterDescription.setAttribute('content', description);
-    if (twitterImage) twitterImage.setAttribute('content', `timer-image.html?t=${Date.now()}`);
+    if (twitterImage) twitterImage.setAttribute('content', `https://theobjectofheatinc.github.io/FastSiteTimeCount/timer-image.svg?t=${Date.now()}`);
 }
 
 // Функция для получения параметров из URL

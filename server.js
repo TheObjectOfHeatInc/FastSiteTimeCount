@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Базовый URL для генерации ссылок
-const BASE_URL = process.env.BASE_URL || 'http://lehagigachad.ru';
+const BASE_URL = process.env.BASE_URL || 'http://manautosofatrade.ru';
 
 // Middleware для перенаправления на HTTPS (временно отключен для HTTP)
 app.use((req, res, next) => {

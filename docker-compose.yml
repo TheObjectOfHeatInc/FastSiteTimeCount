@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - BASE_URL=http://lehagigachad.ru
+      - BASE_URL=http://manautosofatrade.ru
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - ./images:/app/images

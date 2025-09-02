@@ -10,8 +10,39 @@ const PORT = process.env.PORT || 3000;
 // Базовый URL для генерации ссылок
 const BASE_URL = process.env.BASE_URL || 'http://manautosofatrade.ru';
 
-// Middleware для перенаправления на HTTPS (временно отключен для HTTP)
+// Middleware для блокировки старых доменов и перенаправления на HTTPS
 app.use((req, res, next) => {
+    const host = req.get('host');
+    
+    // Блокируем старый домен
+    if (host === 'lehagigachad.ru' || host === 'www.lehagigachad.ru') {
+        return res.status(410).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Домен перемещён</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #000; color: #fff; }
+                    h1 { color: #ff6b6b; }
+                    a { color: #4ecdc4; text-decoration: none; }
+                </style>
+            </head>
+            <body>
+                <h1>🚫 Этот домен больше не используется</h1>
+                <p>Сайт переехал на новый адрес:</p>
+                <h2><a href="http://manautosofatrade.ru">manautosofatrade.ru</a></h2>
+                <p>Автоматическое перенаправление через 5 секунд...</p>
+                <script>
+                    setTimeout(() => {
+                        window.location.href = 'http://manautosofatrade.ru';
+                    }, 5000);
+                </script>
+            </body>
+            </html>
+        `);
+    }
+    
     // Отключаем HTTPS редирект для работы на HTTP
     // if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
     //     res.redirect(`https://${req.header('host')}${req.url}`);
@@ -119,7 +150,10 @@ async function initTelegramBot() {
 📊 /status - текущий статус
 ⏰ /time - показать текущее время
 
-Напиши "СТАРТУЕМ!" для быстрого запуска`);
+Быстрые команды:
+• "Стартуем!" - запустить таймер
+• "стоп!" - остановить таймер
+• "к ноге" или "место" - пересоздать сообщение с таймером`);
     });
 
     // Команда /timer
@@ -163,6 +197,33 @@ ${isActive ? '✅ Таймер активен' : '❌ Таймер остано�
     bot.onText(/стоп!/i, (msg) => {
         const chatId = msg.chat.id;
         stopTimerForChat(chatId);
+    });
+
+    // Команда "к ноге" и "место" - удаляет сообщение и создаёт новое
+    bot.onText(/(к ноге|К НОГЕ|к ноге!|К НОГЕ!|место|МЕСТО|место!|МЕСТО!)/i, async (msg) => {
+        const chatId = msg.chat.id;
+        
+        if (activeChats.has(chatId)) {
+            const messageId = chatMessages.get(chatId);
+            
+            // Пытаемся удалить старое сообщение
+            if (messageId) {
+                try {
+                    await bot.deleteMessage(chatId, messageId);
+                    console.log(`🗑️ Удалено сообщение ${messageId} в чате ${chatId}`);
+                } catch (error) {
+                    console.log(`❌ Не удалось удалить сообщение: ${error.message}`);
+                }
+            }
+            
+            // Очищаем ID сообщения - следующее обновление создаст новое
+            chatMessages.delete(chatId);
+            
+            // Отправляем новое сообщение
+            sendCurrentTimer(chatId);
+            
+            console.log(`🦴 Команда "к ноге/место" выполнена для чата ${chatId}`);
+        }
     });
 
     // Логирование всех сообщений (без ответов)
